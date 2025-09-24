@@ -59,12 +59,12 @@ public class StockService {
         }
     }
 
-    public JsonNode getStockNews(String symbol) {
+    public JsonNode getStockNews(String symbols, Integer limit) {
         try {
             JsonNode response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .queryParam("function", "NEWS_SENTIMENT")
-                            .queryParam("tickers", symbol)
+                            .queryParam("tickers", symbols)
                             .queryParam("apikey", apiKey)
                             .build())
                     .retrieve()
@@ -72,18 +72,32 @@ public class StockService {
                     .block();
 
             if (response == null || !response.has("feed")) {
-                return errorResponse("No news found for symbol: " + symbol);
+                return errorResponse("No news found for symbol: " + symbols);
             }
 
             ArrayNode articles = mapper.createArrayNode();
+            int count = 0;
             for (JsonNode article : response.get("feed")) {
+                if (limit != null && count >= limit) break;
+
                 ObjectNode simplified = mapper.createObjectNode();
                 simplified.put("title", article.get("title").asText());
                 simplified.put("url", article.get("url").asText());
                 simplified.put("summary", article.get("summary").asText());
                 simplified.put("time", article.get("time_published").asText());
                 simplified.put("sentiment", article.get("overall_sentiment_label").asText());
+                simplified.put("source", article.get("source").asText());
+
+                ArrayNode tickers = mapper.createArrayNode();
+                if (article.has("ticker_sentiment")) {
+                    for (JsonNode ticker : article.get("ticker_sentiment")) {
+                        tickers.add(ticker.get("ticker").asText());
+                    }
+                }
+                simplified.set("tickers", tickers);
+
                 articles.add(simplified);
+                count++;
             }
 
             return articles;

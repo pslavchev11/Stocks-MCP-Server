@@ -58,7 +58,8 @@ public class McpServerRunner implements CommandLineRunner {
                 } else if ("getStockNews".equals(method)) {
                     if (request.has("params") && request.get("params").has("symbol")) {
                         String symbol = request.get("params").get("symbol").asText();
-                        JsonNode news = stockService.getStockNews(symbol);
+                        Integer limit = request.get("params").has("limit") ? request.get("params").get("limit").asInt() : null;
+                        JsonNode news = stockService.getStockNews(symbol, limit);
                         response.set("result", news);
 
                         if (news.has("error")) {
