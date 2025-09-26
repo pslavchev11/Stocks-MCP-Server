@@ -77,16 +77,17 @@ public class StockService {
 
             ArrayNode articles = mapper.createArrayNode();
             int count = 0;
+
             for (JsonNode article : response.get("feed")) {
                 if (limit != null && count >= limit) break;
 
                 ObjectNode simplified = mapper.createObjectNode();
-                simplified.put("title", article.get("title").asText());
-                simplified.put("url", article.get("url").asText());
-                simplified.put("summary", article.get("summary").asText());
-                simplified.put("time", article.get("time_published").asText());
-                simplified.put("sentiment", article.get("overall_sentiment_label").asText());
-                simplified.put("source", article.get("source").asText());
+                simplified.put("title", article.path("title").asText(""));
+                simplified.put("url", article.path("url").asText(""));
+                simplified.put("summary", article.path("summary").asText(""));
+                simplified.put("time", article.path("time_published").asText(""));
+                simplified.put("sentiment", article.path("overall_sentiment_label").asText(""));
+                simplified.put("source", article.path("source").asText(""));
 
                 ArrayNode tickers = mapper.createArrayNode();
                 if (article.has("ticker_sentiment")) {
@@ -99,6 +100,12 @@ public class StockService {
                 articles.add(simplified);
                 count++;
             }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbols);
+            result.put("count", articles.size());
+            result.set("articles", articles);
 
             return articles;
         } catch (Exception e) {
