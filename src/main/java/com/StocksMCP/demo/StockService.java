@@ -107,7 +107,7 @@ public class StockService {
             result.put("count", articles.size());
             result.set("articles", articles);
 
-            return articles;
+            return result;
         } catch (Exception e) {
             return errorResponse("Error fetching news: " + e.getMessage());
         }
