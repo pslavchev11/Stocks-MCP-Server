@@ -27,7 +27,6 @@ public class McpServerRunner implements CommandLineRunner {
         System.err.println("MCP Server started. Waiting for JSON-RPC requests...");
 
         while ((line = reader.readLine()) != null) {
-//            if (line.isBlank()) continue;
             if (line.trim().isEmpty()) continue;
 
             System.err.println("Received: " + line);
