@@ -113,6 +113,35 @@ public class StockService {
         }
     }
 
+    public JsonNode getCompanyOverview(String symbol) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "OVERVIEW")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching company overview: " + symbol);
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("symbol", symbol);
+            result.put("assetType", response.path("AssetType").asText(""));
+            result.put("description", response.path("Description").asText(""));
+            result.put("country", response.path("Country").asText(""));
+            result.put("industry", response.path("Industry").asText(""));
+            result.put("latestQuarter", response.path("LatestQuarter").asText(""));
+            return result;
+        }  catch (Exception e) {
+            return errorResponse("Error fetching company overview: " + e.getMessage());
+        }
+    }
+
     private ObjectNode errorResponse(String message) {
         ObjectNode error = mapper.createObjectNode();
         error.put("error", message);

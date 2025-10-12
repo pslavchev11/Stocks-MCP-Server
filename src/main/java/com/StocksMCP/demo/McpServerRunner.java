@@ -70,6 +70,19 @@ public class McpServerRunner implements CommandLineRunner {
                     } else {
                         response.set("error", mapper.createObjectNode().put("message", "Missing symbol parameter"));
                     }
+                } else if ("getCompanyOverview".equals(method)) {
+                    if (request.has("params") && request.get("params").has("symbol")) {
+                        String symbol = request.get("params").get("symbol").asText();
+                        JsonNode overview = stockService.getCompanyOverview(symbol);
+
+                        if (overview.has("error")) {
+                            response.set("error", overview.get("error"));
+                        } else {
+                            response.set("result", overview);
+                        }
+                    } else {
+                        response.set("error", mapper.createObjectNode().put("message", "Missing symbol parameter"));
+                    }
                 } else {
                     response.set("error", mapper.createObjectNode().put("message", "Unknown method: " + method));
                 }
