@@ -1,1 +1,1 @@
-# Stcoks-MCP-Server
+# Stocks-MCP-Server
