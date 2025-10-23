@@ -5,8 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriBuilder;
+import reactor.netty.http.client.HttpClient;
 
 import java.time.Instant;
 
@@ -25,7 +29,14 @@ public class StockService {
     ) {
         this.apiKey = apiKey;
         this.baseUrl = baseUrl;
-        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+        ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)) // 16MB limit
+                .build();
+
+        this.webClient = WebClient.builder()
+                .baseUrl(baseUrl)
+                .exchangeStrategies(strategies)
+                .build();
     }
 
     public JsonNode getStockPrice(String symbol) {
@@ -139,6 +150,55 @@ public class StockService {
             return result;
         }  catch (Exception e) {
             return errorResponse("Error fetching company overview: " + e.getMessage());
+        }
+    }
+
+    public JsonNode getInsiderTransactions(String symbol, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "INSIDER_TRANSACTIONS")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching insider transactions: " + symbol);
+            }
+
+            ArrayNode transactions = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode transaction : response.get("data")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+
+                row.put("transactionDate", transaction.path("transaction_date").asText(""));
+                row.put("symbol", transaction.path("ticker").asText(""));
+                row.put("executiveName", transaction.path("executive").asText(""));
+                row.put("executiveTitle", transaction.path("executive_title").asText(""));
+                row.put("securityType", transaction.path("security_type").asText(""));
+                row.put("acquisitionOrDisposal", transaction.path("acquisition_or_disposal").asText(""));
+                row.put("shares", transaction.path("shares").asDouble(0.0));
+                row.put("sharePrice", transaction.path("share_price").asDouble(0.0));
+
+                transactions.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbol);
+            result.put("count", transactions.size());
+            result.set("transactions", transactions);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching insider transactions: " + e.getMessage());
         }
     }
 
