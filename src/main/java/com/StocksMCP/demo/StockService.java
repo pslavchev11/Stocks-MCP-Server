@@ -202,6 +202,53 @@ public class StockService {
         }
     }
 
+    public JsonNode getIncomeStatement(String symbol, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "INCOME_STATEMENT")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching income statement: " + symbol);
+            }
+
+            ArrayNode statements = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode statement : response.get("annualReports")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+
+                row.put("fiscalDateEnding", statement.path("fiscalDateEnding").asText(""));
+                row.put("reportedCurrency", statement.path("reportedCurrency").asText(""));
+                row.put("totalRevenue", statement.path("totalRevenue").asDouble(0.0));
+                row.put("grossProfit", statement.path("grossProfit").asDouble(0.0));
+                row.put("depriciationAndAmortization", statement.path("depreciationAndAmortization").asDouble(0.0));
+                row.put("netIncome", statement.path("netIncome").asDouble(0.0));
+
+                statements.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbol);
+            result.put("count", statements.size());
+            result.set("incomeStatements", statements);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching income statement: " + e.getMessage());
+        }
+    }
+
     private ObjectNode errorResponse(String message) {
         ObjectNode error = mapper.createObjectNode();
         error.put("error", message);
