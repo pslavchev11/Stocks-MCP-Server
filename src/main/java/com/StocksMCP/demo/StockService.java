@@ -249,6 +249,54 @@ public class StockService {
         }
     }
 
+    public JsonNode getEarningsEstimates(String symbol, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "EARNINGS_ESTIMATES")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching earnings estimates: " + symbol);
+            }
+
+            ArrayNode estimates = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode estimate : response.get("estimates")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+
+                row.put("Date", estimate.path("date").asText(""));
+                row.put("estimateAverageEPS", estimate.path("eps_estimate_average").asDouble(0.0));
+                row.put("estimateHighEPS", estimate.path("eps_estimate_high").asDouble(0.0));
+                row.put("estimateLowEPS", estimate.path("eps_estimate_low").asDouble(0.0));
+                row.put("numberOfAnalysts", estimate.path("eps_estimate_analyst_count").asInt(0));
+                row.put("estimateAverageRevenue", estimate.path("revenue_estimate_average").asDouble(0.0));
+                row.put("numberOfAnalystsRevenue", estimate.path("revenue_estimate_analyst_count").asDouble(0.0));
+
+                estimates.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbol);
+            result.put("count", estimates.size());
+            result.set("earningsEstimates", estimates);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching earnings estimates: " + e.getMessage());
+        }
+    }
+
     private ObjectNode errorResponse(String message) {
         ObjectNode error = mapper.createObjectNode();
         error.put("error", message);
