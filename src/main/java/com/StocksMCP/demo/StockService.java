@@ -4,13 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
-import reactor.netty.http.client.HttpClient;
+
 
 import java.time.Instant;
 
@@ -39,6 +38,7 @@ public class StockService {
                 .build();
     }
 
+    @Tool(name = "getStockPrice", description = "Get the current stock price for a given symbol")
     public JsonNode getStockPrice(String symbol) {
         try {
             // Call Alpha Vantage API to get stock price
@@ -70,6 +70,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getStockNews", description = "Get the latest news articles for a given stock symbol")
     public JsonNode getStockNews(String symbols, Integer limit) {
         try {
             JsonNode response = webClient.get()
@@ -124,6 +125,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getCompanyOverview", description = "Get the company overview for a given stock symbol")
     public JsonNode getCompanyOverview(String symbol) {
         try {
             JsonNode response = webClient.get()
@@ -153,6 +155,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getInsiderTransactions", description = "Get insider transactions for a given stock symbol")
     public JsonNode getInsiderTransactions(String symbol, Integer limit) {
         try {
             JsonNode response = webClient.get()
@@ -202,6 +205,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getIncomeStatement", description = "Get income statement for a given stock symbol")
     public JsonNode getIncomeStatement(String symbol, Integer limit) {
         try {
             JsonNode response = webClient.get()
@@ -249,6 +253,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getEarningsEstimates", description = "Get earnings estimates for a given stock symbol")
     public JsonNode getEarningsEstimates(String symbol, Integer limit) {
         try {
             JsonNode response = webClient.get()
