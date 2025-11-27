@@ -232,9 +232,28 @@ public class StockService {
 
                 row.put("fiscalDateEnding", statement.path("fiscalDateEnding").asText(""));
                 row.put("reportedCurrency", statement.path("reportedCurrency").asText(""));
-                row.put("totalRevenue", statement.path("totalRevenue").asDouble(0.0));
                 row.put("grossProfit", statement.path("grossProfit").asDouble(0.0));
+                row.put("totalRevenue", statement.path("totalRevenue").asDouble(0.0));
+                row.put("costOfRevenue", statement.path("costOfRevenue").asDouble(0.0));
+                row.put("costofGoodsAndServicesSold", statement.path("costOfGoodsAndServicesSold").asDouble(0.0));
+                row.put("operatingIncome", statement.path("operatingIncome").asDouble(0.0));
+                row.put("sellingGeneralAndAdministrative", statement.path("sellingGeneralAndAdministrative").asDouble(0.0));
+                row.put("researchAndDevelopment", statement.path("researchAndDevelopment").asDouble(0.0));
+                row.put("operatingExpenses", statement.path("operatingExpenses").asDouble(0.0));
+                row.put("investmentIncomeNet", statement.path("investmentIncomeNet").asDouble(0.0));
+                row.put("interestIncome", statement.path("interestIncome").asDouble(0.0));
+                row.put("interestExpense", statement.path("interestExpense").asDouble(0.0));
+                row.put("nonInterestIncome", statement.path("nonInterestIncome").asDouble(0.0));
+                row.put("otherNonOperatingIncome", statement.path("otherNonOperatingIncome").asDouble(0.0));
+                row.put("depriciation", statement.path("depreciation").asDouble(0.0));
                 row.put("depriciationAndAmortization", statement.path("depreciationAndAmortization").asDouble(0.0));
+                row.put("incomeBeforeTax", statement.path("incomeBeforeTax").asDouble(0.0));
+                row.put("incomeTaxExpense", statement.path("incomeTaxExpense").asDouble(0.0));
+                row.put("interestAndDebtExpense", statement.path("interestAndDebtExpense").asDouble(0.0));
+                row.put("netIncomeFromContinuingOperations", statement.path("netIncomeFromContinuingOperations").asDouble(0.0));
+                row.put("comprehensiveIncomeNetOfTax", statement.path("comprehensiveIncomeNetOfTax").asDouble(0.0));
+                row.put("ebit", statement.path("ebit").asDouble(0.0));
+                row.put("ebitda", statement.path("ebitda").asDouble(0.0));
                 row.put("netIncome", statement.path("netIncome").asDouble(0.0));
 
                 statements.add(row);
