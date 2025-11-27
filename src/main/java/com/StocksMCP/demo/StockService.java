@@ -272,6 +272,85 @@ public class StockService {
         }
     }
 
+    public JsonNode getBalanceSheet(String symbol, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "BALANCE_SHEET")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching balance sheet: " + symbol);
+            }
+
+            ArrayNode sheets = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode sheet : response.get("annualReports")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+
+                row.put("fiscalDateEnding", sheet.path("fiscalDateEnding").asText(""));
+                row.put("reportedCurrency", sheet.path("reportedCurrency").asText(""));
+                row.put("totalAssets", sheet.path("totalAssets").asDouble(0.0));
+                row.put("totalCurrentAssets", sheet.path("totalCurrentAssets").asDouble(0.0));
+                row.put("cashAndCashEquivalentsAtCarryingValue", sheet.path("cashAndCashEquivalentsAtCarryingValue").asDouble(0.0));
+                row.put("cashAndShortTermInvestments", sheet.path("cashAndShortTermInvestments").asDouble(0.0));
+                row.put("inventory", sheet.path("inventory").asDouble(0.0));
+                row.put("currentNetReceivables", sheet.path("currentNetReceivables").asDouble(0.0));
+                row.put("totalNonCurrentAssets", sheet.path("totalNonCurrentAssets").asDouble(0.0));
+                row.put("propertyPlantEquipment", sheet.path("propertyPlantEquipment").asDouble(0.0));
+                row.put("accumulatedDepreciationAmortizationPPE", sheet.path("accumulatedDepreciationAmortizationPPE").asDouble(0.0));
+                row.put("intangibleAssets", sheet.path("intangibleAssets").asDouble(0.0));
+                row.put("intagibleAssetsExcludingGoodwill", sheet.path("intangibleAssetsExcludingGoodwill").asDouble(0.0));
+                row.put("goodwill", sheet.path("goodwill").asDouble(0.0));
+                row.put("investments", sheet.path("investments").asDouble(0.0));
+                row.put("longTermInvestments", sheet.path("longTermInvestments").asDouble(0.0));
+                row.put("shortTermInvestments", sheet.path("shortTermInvestments").asDouble(0.0));
+                row.put("otherCurrentAssets", sheet.path("otherCurrentAssets").asDouble(0.0));
+                row.put("otherNonCurrentAssets", sheet.path("otherNonCurrentAssets").asDouble(0.0));
+                row.put("totalLiabilities", sheet.path("totalLiabilities").asDouble(0.0));
+                row.put("totalCurrentLiabilities", sheet.path("totalCurrentLiabilities").asDouble(0.0));
+                row.put("currentAccountsPayable", sheet.path("currentAccountsPayable").asDouble(0.0));
+                row.put("deferredRevenue", sheet.path("deferredRevenue").asDouble(0.0));
+                row.put("currentDebt", sheet.path("currentDebt").asDouble(0.0));
+                row.put("shortTermDebt", sheet.path("shortTermDebt").asDouble(0.0));
+                row.put("totalNonCurrentLiabilities", sheet.path("totalNonCurrentLiabilities").asDouble(0.0));
+                row.put("capitalLeaseObligations", sheet.path("capitalLeaseObligations").asDouble(0.0));
+                row.put("longTermDebt", sheet.path("longTermDebt").asDouble(0.0));
+                row.put("currentLongTermDebt", sheet.path("currentLongTermDebt").asDouble(0.0));
+                row.put("longTermDebtNoncurrent", sheet.path("longTermDebtNoncurrent").asDouble(0.0));
+                row.put("shortLongTermDebtTotal", sheet.path("shortLongTermDebtTotal").asDouble(0.0));
+                row.put("otherCurrentLiabilities", sheet.path("otherCurrentLiabilities").asDouble(0.0));
+                row.put("otherNonCurrentLiabilities", sheet.path("otherNonCurrentLiabilities").asDouble(0.0));
+                row.put("totalShareholderEquity", sheet.path("totalShareholderEquity").asDouble(0.0));
+                row.put("treasuryStock", sheet.path("treasuryStock").asDouble(0.0));
+                row.put("retainedEarnings", sheet.path("retainedEarnings").asDouble(0.0));
+                row.put("commonStock", sheet.path("commonStock").asDouble(0.0));
+                row.put("commonStockSharesOutstanding", sheet.path("commonStockSharesOutstanding").asDouble(0.0));
+
+                sheets.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbol);
+            result.put("count", sheets.size());
+            result.set("balanceSheets", sheets);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching balance sheet: " + e.getMessage());
+        }
+    }
+
     @Tool(name = "getEarningsEstimates", description = "Get earnings estimates for a given stock symbol")
     public JsonNode getEarningsEstimates(String symbol, Integer limit) {
         try {
