@@ -272,6 +272,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getBalanceSheet", description = "Get balance sheet for a given stock symbol")
     public JsonNode getBalanceSheet(String symbol, Integer limit) {
         try {
             JsonNode response = webClient.get()
