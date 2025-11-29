@@ -352,6 +352,76 @@ public class StockService {
         }
     }
 
+    public JsonNode getCashFlow(String symbol, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "CASH_FLOW")
+                            .queryParam("symbol", symbol)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || response.isEmpty()) {
+                return errorResponse("Error fetching cash flow: " + symbol);
+            }
+
+            ArrayNode cashFlows = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode cashFlow : response.get("annualReports")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+
+                row.put("fiscalDateEnding", cashFlow.path("fiscalDateEnding").asText(""));
+                row.put("reportedCurrency", cashFlow.path("reportedCurrency").asText(""));
+                row.put("operatingCashflow", cashFlow.path("operatingCashflow").asDouble(0.0));
+                row.put("paymentsForOperatingActivities", cashFlow.path("paymentsForOperatingActivities").asDouble(0.0));
+                row.put("proceedsFromOperatingActivities", cashFlow.path("proceedsFromOperatingActivities").asDouble(0.0));
+                row.put("changeInOperatingLiabilities", cashFlow.path("changeInOperatingLiabilities").asDouble(0.0));
+                row.put("changeInOperatingAssets", cashFlow.path("changeInOperatingAssets").asDouble(0.0));
+                row.put("depreciationDepletionAndAmortization", cashFlow.path("depreciationDepletionAndAmortization").asDouble(0.0));
+                row.put("capitalExpenditures", cashFlow.path("capitalExpenditures").asDouble(0.0));
+                row.put("changeInReceivables", cashFlow.path("changeInReceivables").asDouble(0.0));
+                row.put("changeInInventory", cashFlow.path("changeInInventory").asDouble(0.0));
+                row.put("profitLoss", cashFlow.path("profitLoss").asDouble(0.0));
+                row.put("cashflowFromInvestment", cashFlow.path("cashflowFromInvestment").asDouble(0.0));
+                row.put("cashflowFromFinancing", cashFlow.path("cashflowFromFinancing").asDouble(0.0));
+                row.put("proceedsFromRepaymentsOfShortTermDebt", cashFlow.path("proceedsFromRepaymentsOfShortTermDebt").asDouble(0.0));
+                row.put("paymentsForRepurchaseOfCommonStock", cashFlow.path("paymentsForRepurchaseOfCommonStock").asDouble(0.0));
+                row.put("paymentsForRepurchaseOfEquity", cashFlow.path("paymentsForRepurchaseOfEquity").asDouble(0.0));
+                row.put("paymentsForRepurchaseOfPreferredStock", cashFlow.path("paymentsForRepurchaseOfPreferredStock").asDouble(0.0));
+                row.put("dividendPayout", cashFlow.path("dividendPayout").asDouble(0.0));
+                row.put("dividendPayoutCommonStock", cashFlow.path("dividendPayoutCommonStock").asDouble(0.0));
+                row.put("dividendPayoutPreferredStock", cashFlow.path("dividendPayoutPreferredStock").asDouble(0.0));
+                row.put("proceedsFromIssuanceOfCommonStock", cashFlow.path("proceedsFromIssuanceOfCommonStock").asDouble(0.0));
+                row.put("proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet", cashFlow.path("proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet").asDouble(0.0));
+                row.put("proceedsFromIssuanceOfPreferredStock", cashFlow.path("proceedsFromIssuanceOfPreferredStock").asDouble(0.0));
+                row.put("proceedsFromRepurchaseOfEquity", cashFlow.path("proceedsFromRepurchaseOfEquity").asDouble(0.0));
+                row.put("proceedsFromSaleOfTreasuryStock", cashFlow.path("proceedsFromSaleOfTreasuryStock").asDouble(0.0));
+                row.put("changeInCashAndCashEquivalents", cashFlow.path("changeInCashAndCashEquivalents").asDouble(0.0));
+                row.put("changeInExchangeRate", cashFlow.path("changeInExchangeRate").asDouble(0.0));
+                row.put("netIncome", cashFlow.path("netIncome").asDouble(0.0));
+
+                cashFlows.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", symbol);
+            result.put("count", cashFlows.size());
+            result.set("cashFlows", cashFlows);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching cash flow: " + e.getMessage());
+        }
+    }
+
     @Tool(name = "getEarningsEstimates", description = "Get earnings estimates for a given stock symbol")
     public JsonNode getEarningsEstimates(String symbol, Integer limit) {
         try {

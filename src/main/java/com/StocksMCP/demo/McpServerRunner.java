@@ -125,6 +125,20 @@ public class McpServerRunner implements CommandLineRunner {
                     } else {
                         response.set("error", mapper.createObjectNode().put("message", "Missing symbol parameter"));
                     }
+                } else if ("getCashFlow".equals(method)) {
+                    if (request.has("params") && request.get("params").has("symbol")) {
+                        String symbol = request.get("params").get("symbol").asText();
+                        Integer limit = request.get("params").has("limit") ? request.get("params").get("limit").asInt() : null;
+                        JsonNode cashFlow = stockService.getCashFlow(symbol, limit);
+
+                        if (cashFlow.has("error")) {
+                            response.set("error", cashFlow.get("error"));
+                        } else {
+                            response.set("result", cashFlow);
+                        }
+                    } else {
+                        response.set("error", mapper.createObjectNode().put("message", "Missing symbol parameter"));
+                    }
                 } else if ("getEarningsEstimates".equals(method)) {
                     if (request.has("params") && request.get("params").has("symbol")) {
                         String symbol = request.get("params").get("symbol").asText();
