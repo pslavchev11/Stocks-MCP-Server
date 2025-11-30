@@ -352,6 +352,7 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getCashFlow", description = "Get cash flow for a given symbol")
     public JsonNode getCashFlow(String symbol, Integer limit) {
         try {
             JsonNode response = webClient.get()
