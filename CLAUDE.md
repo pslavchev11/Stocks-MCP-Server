@@ -43,6 +43,6 @@ MCP client → stdin JSON-RPC → `McpServerRunner` → `StockService` → Alpha
 
 ## Configuration
 
-`src/main/resources/application.properties` holds the Alpha Vantage API key and base URL. The key is currently hardcoded — consider externalising via environment variable (`ALPHA_VANTAGE_API_KEY`) before sharing or deploying.
+`src/main/resources/application.properties` holds the Alpha Vantage base URL. The API key is read from the `ALPHA_VANTAGE_API_KEY` environment variable — copy `.env.example` to `.env` and set the value before running locally.
 
 WebClient is configured with a 16 MB in-memory buffer to handle large financial responses.
