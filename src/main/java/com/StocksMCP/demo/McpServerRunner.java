@@ -161,7 +161,7 @@ public class McpServerRunner implements CommandLineRunner {
                         JsonNode transcript = stockService.getEarningsCallTranscript(symbol, quarter, limit);
 
                         if (transcript.has("error")) {
-                            response.set("error", transcript.get("error"));
+                            response.set("error", mapper.createObjectNode().put("message", transcript.get("error").asText()));
                         } else {
                             response.set("result", transcript);
                         }

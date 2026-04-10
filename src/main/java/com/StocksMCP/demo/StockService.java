@@ -486,7 +486,9 @@ public class StockService {
                     .bodyToMono(JsonNode.class)
                     .block();
 
-            if (response == null || !response.has("transcript")) {
+            if (response == null || !response.has("transcript")
+                    || !response.get("transcript").isArray()
+                    || response.get("transcript").isEmpty()) {
                 return errorResponse("No transcript found for symbol: " + symbol + " quarter: " + quarter);
             }
 
