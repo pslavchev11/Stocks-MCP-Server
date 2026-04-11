@@ -472,6 +472,55 @@ public class StockService {
         }
     }
 
+    @Tool(name = "getEarningsCallTranscript", description = "Get earnings call transcript for a given stock symbol and quarter (e.g. 2024Q1)")
+    public JsonNode getEarningsCallTranscript(String symbol, String quarter, Integer limit) {
+        try {
+            JsonNode response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("function", "EARNINGS_CALL_TRANSCRIPT")
+                            .queryParam("symbol", symbol)
+                            .queryParam("quarter", quarter)
+                            .queryParam("apikey", apiKey)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(JsonNode.class)
+                    .block();
+
+            if (response == null || !response.has("transcript")
+                    || !response.get("transcript").isArray()
+                    || response.get("transcript").isEmpty()) {
+                return errorResponse("No transcript found for symbol: " + symbol + " quarter: " + quarter);
+            }
+
+            ArrayNode entries = mapper.createArrayNode();
+            int count = 0;
+
+            for (JsonNode entry : response.get("transcript")) {
+                if (limit != null && count >= limit) break;
+
+                ObjectNode row = mapper.createObjectNode();
+                row.put("speaker", entry.path("speaker").asText(""));
+                row.put("title", entry.path("title").asText(""));
+                row.put("content", entry.path("content").asText(""));
+                row.put("sentiment", entry.path("sentiment").asText(""));
+
+                entries.add(row);
+                count++;
+            }
+
+            ObjectNode result = mapper.createObjectNode();
+            result.put("success", true);
+            result.put("symbol", response.path("symbol").asText(symbol));
+            result.put("quarter", response.path("quarter").asText(quarter));
+            result.put("count", entries.size());
+            result.set("transcript", entries);
+
+            return result;
+        } catch (Exception e) {
+            return errorResponse("Error fetching earnings call transcript: " + e.getMessage());
+        }
+    }
+
     private ObjectNode errorResponse(String message) {
         ObjectNode error = mapper.createObjectNode();
         error.put("error", message);
